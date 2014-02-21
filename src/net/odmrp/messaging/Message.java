@@ -1,5 +1,6 @@
 package net.odmrp.messaging;
 
+import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
 import net.odmrp.constants.*;
@@ -15,10 +16,26 @@ public class Message {
 	
 	public int type;
 	
+	public Message() {
+		
+	}
+	
 	public Message(byte[] payload, int start) {
 		
 	}
 	
+	/**
+	 * 
+	 * @param fromArray
+	 * @param toArray
+	 * @param start
+	 */
+	public void encodeAddress(byte[] fromArray, byte[] toArray, int start) {
+		for (int i = 0; i < fromArray.length; i++) {
+			toArray[start + i] = fromArray[i];
+		}
+	}
+
 	// STATIC METHODS
 	
 	/**

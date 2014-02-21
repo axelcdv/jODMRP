@@ -12,4 +12,5 @@ public class Constants {
 	public static final byte JOINQUERY_TYPE = (byte) 127;
 	public static final byte JOINREPLY_TYPE = (byte) 128;
 
+	public static final int DEFAULT_IPV6_SCOPE = 3;
 }
