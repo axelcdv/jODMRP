@@ -30,4 +30,28 @@ public class Packet {
 			_messages.add(message);
 		}
 	}
+	
+	public byte[] toBytes() {
+		byte[] result;
+		byte[][] messageBytes = new byte[_messages.size()][];
+		int length = 1;
+		int i = 0;
+		for (Message m : _messages) {
+			messageBytes[i] = m.toBytes();
+			length += messageBytes[i].length;
+			i++;
+		}
+		result = new byte[length];
+		result[0] = 0;
+		
+		length = 1;
+		for (int j = 0; j < messageBytes.length; j++) {
+			byte[] bs = messageBytes[j];
+			for (byte b : bs) {
+				result[length++] = b;
+			}
+		}
+		
+		return result;
+	}
 }

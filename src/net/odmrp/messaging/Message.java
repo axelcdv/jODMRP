@@ -57,4 +57,8 @@ public class Message {
 			throw new PacketFormatException("Unknown packet type: " + payload[start]);
 		}
 	}
+	
+	public byte[] toBytes() {
+		return null;
+	}
 }

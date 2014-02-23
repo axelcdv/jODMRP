@@ -13,4 +13,6 @@ public class Constants {
 	public static final byte JOINREPLY_TYPE = (byte) 128;
 
 	public static final int DEFAULT_IPV6_SCOPE = 3;
+	
+	public static final int DEFAULT_PORT = 1212;
 }

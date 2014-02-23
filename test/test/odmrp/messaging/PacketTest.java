@@ -1,0 +1,15 @@
+package test.odmrp.messaging;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+public class PacketTest {
+
+	@Test
+	public void test() {
+//		fail("Not yet implemented");
+		assertTrue(true);
+	}
+
+}
