@@ -29,20 +29,14 @@ public class JoinReplyTest {
 	}
 
 	@Test
-	public void testEncode() throws Exception {
-		System.out.println("Source address: " + _sourceAddress.getAddress());
-		
-		assertEquals(_joinReply.toBytes().length, _joinReply.getMessageLength());
-	}
-
-	@Test
 	public void testEqual() throws Exception {
 		JoinReply jr = new JoinReply(InetAddress.getByName("::12"), 
 				InetAddress.getByName("ff02::1"), 
 				12, 
 				InetAddress.getByName("::13"), 
 				false);
-		assertEquals(_joinReply, jr);
+		assertEquals("Two Join Replies with the same fields should be equal", 
+				_joinReply, jr);
 	}
 	
 	@Test
@@ -52,6 +46,15 @@ public class JoinReplyTest {
 				15, 
 				_nextHopAddress, 
 				false);
-		assertNotSame(_joinReply, jr);
+		assertNotSame("Two Join Replies with at least one differing field should not be equal", 
+				_joinReply, jr);
+	}
+	
+	@Test
+	public void testEncode() throws Exception {
+		System.out.println("Source address: " + _sourceAddress.getAddress());
+		
+		assertEquals("Encoding then decoding a Join Reply should give back an object with the same fields",
+				_joinReply, new JoinReply(_joinReply.toBytes(), 0));
 	}
 }

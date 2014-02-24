@@ -38,15 +38,17 @@ public class JoinReply extends Message {
 		int pointer = start + 1;
 		
 		// Flags & address length
-		int flagAddrLength = payload[pointer++];
+		long flagAddrLength = payload[pointer++] & 0xFF;
+		System.out.println("Flagaddrlength: " + flagAddrLength);
 		if (flagAddrLength >> 4 != (1 + (1 << 3))) {
 			throw new PacketFormatException("Incorrect flags: " + (flagAddrLength >> 4) + ", should be: " + (1 + (1 << 3)));
 		}
-		_addressLength = flagAddrLength & 0x0F;
+		_addressLength = (int) (flagAddrLength & 0x0F) + 1;
+		System.out.println("Address length: " + _addressLength);
 		
 		_messageLength = (payload[pointer++] << 8) + payload[pointer++];
 		
-		_sourceAddress = InetAddress.getByAddress(Arrays.copyOfRange(payload, pointer, _addressLength));
+		_sourceAddress = InetAddress.getByAddress(Arrays.copyOfRange(payload, pointer, pointer + _addressLength));
 		pointer += _addressLength;
 		
 		_sequenceNumber = (payload[pointer++] << 8) + payload[pointer++];
@@ -70,7 +72,7 @@ public class JoinReply extends Message {
 			// Decode address
 			InetAddress address = InetAddress.getByAddress(Arrays.copyOfRange(payload, 
 					pointer, 
-					_addressLength));
+					pointer + _addressLength));
 			pointer += _addressLength;
 			
 			// Address TLV block length
@@ -81,15 +83,17 @@ public class JoinReply extends Message {
 			if (payload[pointer++] != Constants.JOINQUERY_ADDR_TYPE_TYPE) {
 				throw new NotSupportedException("Wrong address block TLV type: " + payload[pointer - 1]);
 			}
-			if (payload[pointer++] != (1 << 7)) {
+			if ((payload[pointer++] & 0xFF) != (1 << 7)) {
 				throw new PacketFormatException("Wrong flags for address block TLV: " + payload[pointer - 1]);
 			}
 			switch (payload[pointer++]) {
 			case Constants.JR_MULTICAST_GROUP_ADDRESS_TYPE:
+				System.out.println("Decoded address: " + address + ", type: " + Constants.JR_MULTICAST_GROUP_ADDRESS_TYPE);
 				_multicastGroupAddress = address;
 				break;
 				
 			case Constants.JR_NEXT_HOP_ADDRESS_TYPE:
+				System.out.println("Decoded address: " + address + ", type: " + Constants.JR_NEXT_HOP_ADDRESS_TYPE);
 				_nextHopAddress = address;
 				break;
 
@@ -180,10 +184,11 @@ public class JoinReply extends Message {
 		int pointer = 0;
 		
 		// Type
-		encoded[pointer++] = (byte)(Constants.JOINREPLY_TYPE << 4);
+		encoded[pointer++] = Constants.JOINREPLY_TYPE;
 		
 		// Flags + address length
-		encoded[pointer++] =  (byte)(_addressLength + ((1 + (1 << 3)) << 4));
+		encoded[pointer++] =  (byte)(_addressLength - 1 + ((1 + (1 << 3)) << 4));
+		System.out.println("Encoded flags + address length: " + (encoded[pointer - 1] & 0xFF));
 		
 		// Message length
 		encoded[pointer++] = (byte)(getMessageLength() >> 8);
@@ -202,6 +207,7 @@ public class JoinReply extends Message {
 		// TLVs length
 		encoded[pointer++] = encoded[pointer++] = 0;
 
+		int type = 0;
 		// Address blocks
 		for (byte[] addr : new byte[][] {_multicastGroupAddress.getAddress(), _nextHopAddress.getAddress()}) {
 			// Num addrs
@@ -228,9 +234,12 @@ public class JoinReply extends Message {
 			encoded[pointer++] = (byte)(1 << 7);
 			
 			// TLV type extension
-			encoded[pointer++] = addr.equals(_multicastGroupAddress.getAddress()) ? 
+			encoded[pointer++] = type == 0 ? 
 					Constants.JR_MULTICAST_GROUP_ADDRESS_TYPE : 
 						Constants.JR_NEXT_HOP_ADDRESS_TYPE;
+			
+			System.out.println("Encoded address: " + addr + ", type: " + encoded[pointer - 1]);
+			type++;
 		}
 		
 		return encoded;
