@@ -17,7 +17,6 @@ public class JoinQuery extends Message {
 	 * Length of an address, in bytes. For now only supports 16 (IPv6)
 	 */
 	private int _addressLength;
-	private int _messageLength;
 	private InetAddress _sourceAddress;
 	private InetAddress _groupAddress;
 	private int _sequenceNumber;
@@ -25,8 +24,6 @@ public class JoinQuery extends Message {
 	
 	public JoinQuery(byte[] payload, int start) throws NotSupportedException, PacketFormatException, UnknownHostException {
 		super();
-		
-		System.out.println(payload[0] + ", " + payload[1]);
 		
 		_addressLength = (payload[++start] & 0x0F) + 1;
 		if (_addressLength != 16) {
@@ -50,7 +47,6 @@ public class JoinQuery extends Message {
 		start = start + 4; // TLVs length + Num addrs + Flags
 		
 		// Multicast group address
-		System.out.println("Getting multicast group address, pointer: " + start);
 		_groupAddress = Inet6Address.getByAddress("",
 				Arrays.copyOfRange(payload, ++start, start += _addressLength),
 				Constants.DEFAULT_IPV6_SCOPE);
@@ -174,7 +170,7 @@ public class JoinQuery extends Message {
 	
 	public String toString() {
 		StringBuffer buf = new StringBuffer(super.toString());
-		buf.append("Join Query:");
+		buf.append("Join Query (" + _type + "):");
 		buf.append("\nAddress length: " + _addressLength);
 		buf.append("\nSource Address: " + _sourceAddress.toString());
 		buf.append("\nGroup address: " + _groupAddress.toString());

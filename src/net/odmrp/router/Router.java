@@ -1,7 +1,6 @@
 package net.odmrp.router;
 
 import java.io.IOException;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;

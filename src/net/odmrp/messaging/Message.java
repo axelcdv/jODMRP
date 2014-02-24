@@ -11,8 +11,11 @@ public class Message {
 	/**
 	 *  Size of the Message, in bytes
 	 */
+	protected int _messageLength;
+	
+	
 	public int getMessageLength() {
-		return 0;
+		return _messageLength;
 	}
 	
 	protected int _type;
@@ -30,7 +33,7 @@ public class Message {
 	}
 	
 	/**
-	 * 
+	 * TODO: add unit test
 	 * @param fromArray
 	 * @param toArray
 	 * @param start

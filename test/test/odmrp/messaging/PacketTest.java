@@ -1,6 +1,6 @@
 package test.odmrp.messaging;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.net.Inet6Address;
 import java.net.UnknownHostException;
