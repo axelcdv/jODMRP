@@ -2,14 +2,13 @@ package net.odmrp.router;
 
 import java.io.IOException;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import net.odmrp.com.Receiver;
 import net.odmrp.com.Sender;
 import net.odmrp.constants.Constants;
-import net.odmrp.exceptions.NotSupportedException;
-import net.odmrp.exceptions.PacketFormatException;
 import net.odmrp.messaging.JoinQuery;
 import net.odmrp.messaging.Packet;
 
@@ -21,7 +20,8 @@ public class Router {
 	
 	public Router() throws Exception {
 		_logger = Logger.getLogger(Router.class.getName());
-		_sender = new Sender(Constants.DEFAULT_PORT);
+		InetAddress groupAddress = InetAddress.getByName(Constants.GROUP_ADDRESS_STRING);
+		_sender = new Sender(Constants.DEFAULT_PORT, groupAddress);
 		_receiver = new Receiver(Constants.DEFAULT_PORT, this);
 	}
 	
@@ -39,20 +39,19 @@ public class Router {
 		JoinQuery jq = null;
 		
 		try {
-			jq = new JoinQuery(Inet6Address.getByAddress("localhost",
-					sourceAddr,
-					Constants.DEFAULT_IPV6_SCOPE), 
-					Inet6Address.getByAddress("group", 
-							groupAddr, 
-							Constants.DEFAULT_IPV6_SCOPE), 12);
+			jq = new JoinQuery(InetAddress.getByName("::1"), 
+					InetAddress.getByName("ff02::1"), 12);
 			
 			System.out.println(jq);
 			byte[] toBytes = jq.toBytes();
 			byte[] payload = new byte[1 + toBytes.length];
-			for (int i = 0; i < payload.length; i++) {
-				payload[i] = i == 0 ? 0 : toBytes[i - 1];
+			payload[0] = (byte)0; // RFC5444 Version
+			for (int i = 1; i < payload.length; i++) {
+				payload[i] = toBytes[i - 1];
 			}
 			_sender.send(new Packet(payload));
+			
+			_receiver.start();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

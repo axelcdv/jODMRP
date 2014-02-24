@@ -1,5 +1,6 @@
 package net.odmrp.constants;
 
+
 public class Constants {
 
 	/**
@@ -15,4 +16,7 @@ public class Constants {
 	public static final int DEFAULT_IPV6_SCOPE = 3;
 	
 	public static final int DEFAULT_PORT = 1212;
+	
+	public static final byte[] GROUP_ADDRESS_BYTES = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,13};
+	public static final String GROUP_ADDRESS_STRING = "255.255.255.255";//"ff02::1"; 
 }

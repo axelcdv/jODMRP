@@ -16,7 +16,17 @@ public class Packet {
 	private List<Message> _messages;
 	
 	public Packet(byte[] payload) throws Exception {
-		// TODO: Parse the payload into an RFC5444 Packet
+		this(payload, payload.length);
+	}
+	
+	/**
+	 * Parse the payload with given length into an RFC5444 packet
+	 * NB: only support Join Query message format for now
+	 * @param payload
+	 * @param length
+	 * @throws Exception
+	 */
+	public Packet(byte[] payload, int length) throws Exception {
 		if (payload[0] != Constants.RFC5444_VERSION) {
 			throw new PacketFormatException("Incorrect version or flags");
 		}
@@ -24,9 +34,10 @@ public class Packet {
 		Message message;
 		_messages = new LinkedList<Message>();
 		
-		while (start < payload.length) {
-			message = new Message(payload, start);
-			start += message.size;
+		while (start < length) {
+			message = Message.Parse(payload, start);
+			System.out.println("Parsed message: " + message + ", length: " + message.getMessageLength());
+			start += message.getMessageLength();
 			_messages.add(message);
 		}
 	}

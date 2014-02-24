@@ -1,9 +1,8 @@
 package net.odmrp.messaging;
 
-import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
-import net.odmrp.constants.*;
+import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.NotSupportedException;
 import net.odmrp.exceptions.PacketFormatException;
 
@@ -12,9 +11,15 @@ public class Message {
 	/**
 	 *  Size of the Message, in bytes
 	 */
-	public int size;
+	public int getMessageLength() {
+		return 0;
+	}
 	
-	public int type;
+	protected int _type;
+	
+	public int getType() {
+		return _type;
+	}
 	
 	public Message() {
 		
@@ -48,13 +53,14 @@ public class Message {
 	 * @throws UnknownHostException 
 	 */
 	public static Message Parse(byte[] payload, int start) throws PacketFormatException, UnknownHostException, NotSupportedException {
+		System.out.println("Parsing message from payload, start = " + start);
 		switch (payload[start]) {
 		case Constants.JOINQUERY_TYPE:
 			return new JoinQuery(payload, start);
 		case Constants.JOINREPLY_TYPE:
 			return new JoinReply(payload, start);
 		default:
-			throw new PacketFormatException("Unknown packet type: " + payload[start]);
+			throw new PacketFormatException("Unknown message type: " + payload[start]);
 		}
 	}
 	

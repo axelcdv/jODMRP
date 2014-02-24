@@ -1,10 +1,9 @@
 package net.odmrp.messaging;
 
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-
-import com.sun.tools.internal.jxc.apt.Const;
 
 import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.NotSupportedException;
@@ -19,8 +18,8 @@ public class JoinQuery extends Message {
 	 */
 	private int _addressLength;
 	private int _messageLength;
-	private Inet6Address _sourceAddress;
-	private Inet6Address _groupAddress;
+	private InetAddress _sourceAddress;
+	private InetAddress _groupAddress;
 	private int _sequenceNumber;
 	
 	
@@ -57,7 +56,7 @@ public class JoinQuery extends Message {
 				Constants.DEFAULT_IPV6_SCOPE);
 	}
 	
-	public JoinQuery(Inet6Address sourceAddress, Inet6Address groupAddress, int sequenceNumber) {
+	public JoinQuery(InetAddress sourceAddress, InetAddress groupAddress, int sequenceNumber) {
 		super();
 		_addressLength = 16;
 		_sourceAddress = sourceAddress;
@@ -139,15 +138,17 @@ public class JoinQuery extends Message {
 		this._addressLength = _addressLength;
 	}
 
+	@Override
 	public int getMessageLength() {
 		return _messageLength;
 	}
 
+	// TODO: shouldn't be necessary
 	public void setMessageLength(int _messageLength) {
 		this._messageLength = _messageLength;
 	}
 
-	public Inet6Address getSourceAddress() {
+	public InetAddress getSourceAddress() {
 		return _sourceAddress;
 	}
 
@@ -155,7 +156,7 @@ public class JoinQuery extends Message {
 		this._sourceAddress = _sourceAddress;
 	}
 
-	public Inet6Address getGroupAddress() {
+	public InetAddress getGroupAddress() {
 		return _groupAddress;
 	}
 

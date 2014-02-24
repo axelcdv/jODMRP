@@ -3,6 +3,7 @@ package net.odmrp.com;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
+import java.util.logging.Logger;
 
 import net.odmrp.exceptions.NotSupportedException;
 import net.odmrp.exceptions.PacketFormatException;
@@ -11,14 +12,17 @@ import net.odmrp.router.Router;
 
 public class Receiver extends Thread{
 
+	private Logger _logger;
 	protected Router _router;
-	private MulticastSocket _socket;
+	protected MulticastSocket _socket;
 	protected volatile boolean _isRunning;
 	
 	public Receiver(int port, Router router) throws IOException {
 		_socket = new MulticastSocket(port);
 		_router = router;
 		_isRunning = false;
+		
+		_logger = Logger.getLogger(Receiver.class.getName());
 	}
 	
 	public void run() {
@@ -31,7 +35,8 @@ public class Receiver extends Thread{
 			p = new DatagramPacket(new byte[3000], 3000);
 			try {
 				_socket.receive(p);
-				Packet packet = new Packet(p.getData());
+				_logger.info("Received packet, payload size: " + p.getData().length + ", " + p.getLength());
+				Packet packet = new Packet(p.getData(), p.getLength());
 				_router.handlePacket(packet);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
