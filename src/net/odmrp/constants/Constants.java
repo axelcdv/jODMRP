@@ -17,6 +17,10 @@ public class Constants {
 	public static final byte JOINQUERY_ADDR_TYPE_TYPE = (byte)0;
 	public static final byte JOINREPLY_ADDR_TYPE_TYPE = (byte)0;
 	
+	// JQ-Specific Address block type extension for ADDR-TYPE 
+	public static final byte JQ_MULTICAST_GROUP_ADDRESS_TYPE = 0;
+	
+	// JR-Specific Address block type extension for ADDR-TYPE
 	public static final byte JR_MULTICAST_GROUP_ADDRESS_TYPE = 0;
 	public static final byte JR_NEXT_HOP_ADDRESS_TYPE = 1;
 
@@ -26,4 +30,13 @@ public class Constants {
 	
 	public static final byte[] GROUP_ADDRESS_BYTES = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,13};
 	public static final String GROUP_ADDRESS_STRING = "255.255.255.255";//"ff02::1"; 
+	
+	// Time constants
+	public static final long SECOND = 1000;
+	public static final long MINUTE = 60 * SECOND;
+	public static final long HOUR = 60 * MINUTE;
+	public static final long DAY = 24 * HOUR;
+	
+	// Default timeouts
+	public static final long ROUTING_TIMEOUT = 1 * MINUTE; 
 }

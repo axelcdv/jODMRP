@@ -15,6 +15,15 @@ public class Packet {
 	
 	private List<Message> _messages;
 	
+	/**
+	 * Generates a Packet containing a single Message m
+	 * @param m
+	 */
+	public Packet(Message m) {
+		_messages = new LinkedList<Message>();
+		_messages.add(m);
+	}
+	
 	public Packet(byte[] payload) throws Exception {
 		this(payload, payload.length);
 	}
@@ -40,6 +49,10 @@ public class Packet {
 			start += message.getMessageLength();
 			_messages.add(message);
 		}
+	}
+	
+	public List<Message> getMessages() {
+		return _messages;
 	}
 	
 	public byte[] toBytes() {

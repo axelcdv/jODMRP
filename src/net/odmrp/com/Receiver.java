@@ -31,13 +31,18 @@ public class Receiver extends Thread{
 		}
 		_isRunning = true;
 		DatagramPacket p;
+		_logger.info("Receiver running, address = " + _router.getOwnAddress());
 		while(_isRunning) {
 			p = new DatagramPacket(new byte[3000], 3000);
 			try {
 				_socket.receive(p);
-				_logger.info("Received packet, payload size: " + p.getData().length + ", " + p.getLength());
+				_logger.info("Received packet, payload size: " + p.getData().length + ", " + p.getLength() +
+						", from: " + p.getAddress());
+				if (p.getAddress().equals(_router.getOwnAddress())) {
+					_logger.info("Packet from self, dropping it");
+				}
 				Packet packet = new Packet(p.getData(), p.getLength());
-				_router.handlePacket(packet);
+				_router.handlePacket(packet, p.getAddress());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -25,6 +25,10 @@ public class JoinQuery extends Message {
 	public JoinQuery(byte[] payload, int start) throws NotSupportedException, PacketFormatException, UnknownHostException {
 		super();
 		
+		if (Constants.JOINQUERY_TYPE != (_type = payload[start])) {
+			throw new PacketFormatException("Wrong packet type for Join Query: " + payload[start]);
+		}
+		
 		_addressLength = (payload[++start] & 0x0F) + 1;
 		if (_addressLength != 16) {
 			throw new NotSupportedException("Only IPv6 addresses are supported: " + _addressLength);
@@ -97,8 +101,6 @@ public class JoinQuery extends Message {
 		// Flags (1 byte)
 		encoding[++pointer] = 0;
 		
-		System.out.println("Before multicast group address, pointer = " + pointer);
-		
 		// Multicast group address
 		pointer++;
 		encodeAddress(_groupAddress.getAddress(),
@@ -109,8 +111,6 @@ public class JoinQuery extends Message {
 		// Address TLV block length (2 bytes)
 		encoding[pointer] = 0;
 		encoding[++pointer] = 3;
-		
-		System.out.println("After tlv block length, pointer = " + pointer);
 		
 		// Address TLV Type
 		encoding[++pointer] = 0;

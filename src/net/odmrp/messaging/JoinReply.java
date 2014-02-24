@@ -134,6 +134,14 @@ public class JoinReply extends Message {
 		_ackRequired = ackRequired;	
 	}
 	
+	public JoinReply(JoinQuery jq, InetAddress nextHopAddress) throws PacketFormatException {
+		this(jq.getSourceAddress(),
+				jq.getGroupAddress(),
+				jq.getSequenceNumber(),
+				nextHopAddress,
+				false);
+	}
+	
 	// Getters and Setters
 	
 	public InetAddress getSourceAddress() {
