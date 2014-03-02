@@ -10,6 +10,7 @@ import net.odmrp.com.Sender;
 import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.PacketFormatException;
 import net.odmrp.forwarding.Forwarder;
+import net.odmrp.informationBases.Blacklist;
 import net.odmrp.informationBases.GroupMembershipSet;
 import net.odmrp.informationBases.MulticastRoutingSet;
 import net.odmrp.informationBases.MulticastRoutingTuple;
@@ -29,6 +30,7 @@ public class Router {
 	// Information bases
 	protected GroupMembershipSet _groupMembershipSet;
 	protected MulticastRoutingSet _multicastRoutingSet;
+	protected Blacklist _blacklist;
 	
 	public Router() throws Exception {
 		_logger = Logger.getLogger(Router.class.getName());
@@ -42,6 +44,7 @@ public class Router {
 		// Set up information bases
 		_multicastRoutingSet = new MulticastRoutingSet();
 		_groupMembershipSet = new GroupMembershipSet();
+		_blacklist = new Blacklist();
 	}
 	
 	// Setters and getters
@@ -84,6 +87,11 @@ public class Router {
 		_logger.info("Handling Join Query from: " + fromAddress);
 		
 		// Find out if the tuple is valid (9.1)
+		// TODO: Check address length
+		if (_blacklist.isBlacklisted(fromAddress)) {
+			_logger.info("Dropping Join Query from blacklisted address: " + fromAddress);
+			return;
+		}
 		MulticastRoutingTuple matchingTuple = _multicastRoutingSet.findTuple(jq.getSourceAddress());
 		if (matchingTuple != null && matchingTuple.sequenceNumber >= jq.getSequenceNumber()) {
 			// 9.1: The Multicast Routing set contains a tuple for which [...]
@@ -108,13 +116,7 @@ public class Router {
 			//  Section 9.2 and transmit it to all of this Router's neighbors
 			_logger.info("This router is a member of: " + jq.getGroupAddress() + 
 					", generating a Join Reply in return");
-			try {
-				JoinReply jr = new JoinReply(jq, fromAddress);
-				_forwarder.forwardMessage(jr);
-			} catch (PacketFormatException e) {
-				_logger.warning("Exception while generating a Join Reply: " + e);
-				e.printStackTrace();
-			}
+			generateJoinReply(jq, fromAddress);
 		}
 	}
 	
@@ -122,7 +124,17 @@ public class Router {
 		// TODO
 		_logger.info("Handling Join Reply from: " + fromAddress);
 		
-		
+	}
+	
+	public void generateJoinReply(JoinQuery matchingQuery, InetAddress nextHop) {
+		// TODO: handle acknowledgements/pre-acknowledgements
+		try {
+			JoinReply jr = new JoinReply(matchingQuery, nextHop);
+			_forwarder.forwardMessage(jr);
+		} catch (PacketFormatException e) {
+			_logger.warning("Exception while generating a Join Reply: " + e);
+			e.printStackTrace();
+		}
 	}
 	
 	public void initialize() {
