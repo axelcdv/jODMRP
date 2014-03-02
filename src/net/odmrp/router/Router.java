@@ -11,6 +11,8 @@ import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.PacketFormatException;
 import net.odmrp.forwarding.Forwarder;
 import net.odmrp.informationBases.Blacklist;
+import net.odmrp.informationBases.ForwardingTable;
+import net.odmrp.informationBases.ForwardingTuple;
 import net.odmrp.informationBases.GroupMembershipSet;
 import net.odmrp.informationBases.MulticastRoutingSet;
 import net.odmrp.informationBases.MulticastRoutingTuple;
@@ -30,6 +32,7 @@ public class Router {
 	// Information bases
 	protected GroupMembershipSet _groupMembershipSet;
 	protected MulticastRoutingSet _multicastRoutingSet;
+	protected ForwardingTable _forwardingTable;
 	protected Blacklist _blacklist;
 	
 	public Router() throws Exception {
@@ -44,6 +47,7 @@ public class Router {
 		// Set up information bases
 		_multicastRoutingSet = new MulticastRoutingSet();
 		_groupMembershipSet = new GroupMembershipSet();
+		_forwardingTable = new ForwardingTable();
 		_blacklist = new Blacklist();
 	}
 	
@@ -92,10 +96,13 @@ public class Router {
 			_logger.info("Dropping Join Query from blacklisted address: " + fromAddress);
 			return;
 		}
-		MulticastRoutingTuple matchingTuple = _multicastRoutingSet.findTuple(jq.getSourceAddress());
-		if (matchingTuple != null && matchingTuple.sequenceNumber >= jq.getSequenceNumber()) {
+		MulticastRoutingTuple matchingTuple = 
+				_multicastRoutingSet.findTuple(jq.getSourceAddress());
+		if (matchingTuple != null && 
+				matchingTuple.sequenceNumber >= jq.getSequenceNumber()) {
 			// 9.1: The Multicast Routing set contains a tuple for which [...]
-			_logger.info("Dropping old Join Query, sequence number: " + jq.getSequenceNumber());
+			_logger.info("Dropping old Join Query, sequence number: " +
+					jq.getSequenceNumber());
 			return;
 		}
 		
@@ -121,9 +128,22 @@ public class Router {
 	}
 	
 	public void handleJoinReply(JoinReply jr, InetAddress fromAddress) {
-		// TODO
+		// TODO: implement
 		_logger.info("Handling Join Reply from: " + fromAddress);
+		// 9.2.1 Invalid join replies
+		// TODO: Check address length
+		ForwardingTuple matchingTuple = _forwardingTable.getTuple(jr.getMulticastGroupAddress(),
+					jr.getSourceAddress());
+		if (matchingTuple.sequenceNumber > jr.getSequenceNumber()) {
+			_logger.info("Dropping older Join Reply with outdated sequence number: " + jr);
+			return;
+		}
 		
+		// 9.2.3 Processing
+		// 1. If JR.NextHop is an address of this router
+		if (jr.getNextHopAddress().equals(getOwnAddress())) { 
+			
+		}
 	}
 	
 	public void generateJoinReply(JoinQuery matchingQuery, InetAddress nextHop) {
