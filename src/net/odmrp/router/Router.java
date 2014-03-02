@@ -134,16 +134,56 @@ public class Router {
 		// TODO: Check address length
 		ForwardingTuple matchingTuple = _forwardingTable.getTuple(jr.getMulticastGroupAddress(),
 					jr.getSourceAddress());
-		if (matchingTuple.sequenceNumber > jr.getSequenceNumber()) {
+		if (matchingTuple != null && matchingTuple.sequenceNumber > jr.getSequenceNumber()) {
 			_logger.info("Dropping older Join Reply with outdated sequence number: " + jr);
 			return;
 		}
 		
 		// 9.2.3 Processing
 		// 1. If JR.NextHop is an address of this router
-		if (jr.getNextHopAddress().equals(getOwnAddress())) { 
-			
+		if (jr.getNextHopAddress().equals(getOwnAddress())) {
+			boolean newJr = false;
+			// 1.1. Find the matching forwarding tuple
+			if (matchingTuple == null) {
+				// 1.2. set new-jr to TRUE
+				newJr = true;
+				// Create the matching FG tuple
+				_forwardingTable.addTuple(jr.getMulticastGroupAddress(),
+					jr.getSourceAddress(),
+					jr.getSequenceNumber(), 
+					System.currentTimeMillis() + Constants.FG_TIMEOUT);
+			} else {
+				// 1.3. new-jr is set to TRUE if JR.SequenceNumber > F_seq_num
+				newJr = jr.getSequenceNumber() > matchingTuple.sequenceNumber;
+				// Update the matching FG tuple
+				if (newJr) {
+					_forwardingTable.addTuple(jr.getMulticastGroupAddress(),
+							jr.getSourceAddress(),
+							jr.getSequenceNumber(), 
+							System.currentTimeMillis() + Constants.FG_TIMEOUT);
+				}
+			}
+			// 1.4. If new-jr == TRUE or ackRequired is set, consider the JR
+			// for forwarding
+			if (newJr || jr.isAckRequired()) {
+				handleJoinReplyForwarding(jr);
+			}
+		} else {
+			// 2. Else, find the matching multicast routing tuple
+			MulticastRoutingTuple mRoutingTuple = _multicastRoutingSet.findTuple(jr.getSourceAddress());
+			if (mRoutingTuple == null) {
+				_logger.warning("Error: received a Join Reply not related to existing routing tuple");
+				return;
+			}
 		}
+	}
+	
+	/**
+	 * Update the Join Reply and pass it to the forwarder for transmission
+	 * @param jr
+	 */
+	public void handleJoinReplyForwarding(JoinReply jr) {
+		_forwarder.forwardMessage(jr);
 	}
 	
 	public void generateJoinReply(JoinQuery matchingQuery, InetAddress nextHop) {
