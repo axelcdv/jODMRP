@@ -216,6 +216,50 @@ public class Router {
 	 * @param jr
 	 */
 	public void handleJoinReplyForwarding(JoinReply jr) {
+		// 9.2.5 Join Reply transmission
+		// 1. Find the matching Multicast Routing tuple
+		MulticastRoutingTuple mRoutingTuple = _multicastRoutingSet.findTuple(jr.getSourceAddress());
+		if (mRoutingTuple == null || mRoutingTuple.sequenceNumber > jr.getSequenceNumber()) {
+			// 2.If no such tuple exists, then the Join Reply is not processed
+		    //	further and is silently discarded
+			_logger.warning("Not transmitting stale Join Reply: " + jr);
+			return;
+		}
+		// 3. Else, the Join Reply is updated a follows:
+		// - JR.NextHopAddress := R_next_hop
+		jr.setNextHopAddress(mRoutingTuple.nextHopAddress);
+		// - If the pre-ack set contains a matching pre-ack tuple
+		OverheardTuple overheardTuple = _preAckSet.getTuple(jr.getMulticastGroupAddress(),
+				jr.getSourceAddress());
+		if (overheardTuple != null && 
+				overheardTuple.sequenceNumber == jr.getSequenceNumber() &&
+				overheardTuple.originatorAddress.equals(jr.getNextHopAddress())) {
+			// Then clear the JR.AckRequired flag, and set O_exp_time to EXPIRED
+			jr.setAckRequired(false);
+		} else {
+			// Else, if the Pending Acknowledgement Set contains a matching Pending Tuple
+			PendingTuple mPendingTuple = _pendingAckSet.getTuple(jr.getMulticastGroupAddress(), 
+					jr.getSourceAddress());
+			if (mPendingTuple != null && 
+					mPendingTuple.sequenceNumber == jr.getSequenceNumber() &&
+					mPendingTuple.nextHopAddress.equals(jr.getNextHopAddress())) {
+				// Then set JR.AckRequired, and increase P_nth_time by 1
+				jr.setAckRequired(true);
+				mPendingTuple.transmissionCounter++;
+				_pendingAckSet.updateTuple(mPendingTuple);
+			} else {
+				// Finally, if neither the Pre-acknowledgement Set nor the
+		        // Pending Acknowledgement Set contain a corresponding tuple
+				// Insert a Pending Tuple in the Pending Acknowledgement Set
+				_pendingAckSet.addTuple(jr.getMulticastGroupAddress(), 
+						jr.getSourceAddress(), 
+						jr.getSequenceNumber(), 
+						jr.getNextHopAddress(), 
+						System.currentTimeMillis() + Constants.ACK_TIMEOUT);
+				// Clear the JR.AckRequired flag
+				jr.setAckRequired(false);
+			}
+		}
 		_forwarder.forwardMessage(jr);
 	}
 	

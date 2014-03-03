@@ -32,9 +32,17 @@ public class PendingAcknowledgementSet {
 		PendingTuple tuple = new PendingTuple(session, 
 				sequenceNumber, 
 				nextHopAddress, 
-				0, 
+				1, 
 				expirationTime);
 		_repository.put(session, tuple);
+	}
+	
+	/**
+	 * 
+	 * @param tuple
+	 */
+	public void updateTuple(PendingTuple tuple) {
+		_repository.put(tuple.multicastSession, tuple);
 	}
 	
 	/**

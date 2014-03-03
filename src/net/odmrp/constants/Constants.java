@@ -40,5 +40,6 @@ public class Constants {
 	// Default timeouts
 	public static final long ROUTING_TIMEOUT = 1 * MINUTE; 
 	public static final long FG_TIMEOUT = 2 * MINUTE;
+	public static final long ACK_TIMEOUT = 30 * SECOND;
 	public static final long PRE_ACK_TIMEOUT = 30 * SECOND;
 }

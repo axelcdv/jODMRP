@@ -8,7 +8,7 @@ public class PendingTuple {
 	public MulticastSession multicastSession;
 	public int sequenceNumber;
 	public InetAddress nextHopAddress;
-	public int retransmissionCounter; // P_nth_time
+	public int transmissionCounter; // P_nth_time
 	public long expirationTime;
 	public boolean acknowledged;
 	
@@ -22,7 +22,7 @@ public class PendingTuple {
 		this.multicastSession = multicastSession;
 		this.sequenceNumber = sequenceNumber;
 		this.nextHopAddress = nextHopAddress;
-		this.retransmissionCounter = retransmissionCounter;
+		this.transmissionCounter = retransmissionCounter;
 		this.expirationTime = expirationTime;
 		this.acknowledged = acknowledged;
 	}
@@ -34,7 +34,7 @@ public class PendingTuple {
 		this.multicastSession = multicastSession;
 		this.sequenceNumber = sequenceNumber;
 		this.nextHopAddress = nextHopAddress;
-		this.retransmissionCounter = retransmissionCounter;
+		this.transmissionCounter = retransmissionCounter;
 		this.expirationTime = expirationTime;
 		this.acknowledged = false;
 	}

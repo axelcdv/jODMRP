@@ -49,5 +49,13 @@ public class PreAcknowledgementSet {
 						originatorAddress, 
 						expirationTime));
 	}
+	
+	/**
+	 * 
+	 * @param tuple
+	 */
+	public void expireTuple(OverheardTuple tuple) {
+		_repository.remove(tuple.session);
+	}
 
 }
