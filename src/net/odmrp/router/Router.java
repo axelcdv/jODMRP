@@ -16,6 +16,10 @@ import net.odmrp.informationBases.ForwardingTuple;
 import net.odmrp.informationBases.GroupMembershipSet;
 import net.odmrp.informationBases.MulticastRoutingSet;
 import net.odmrp.informationBases.MulticastRoutingTuple;
+import net.odmrp.informationBases.OverheardTuple;
+import net.odmrp.informationBases.PendingAcknowledgementSet;
+import net.odmrp.informationBases.PendingTuple;
+import net.odmrp.informationBases.PreAcknowledgementSet;
 import net.odmrp.messaging.JoinQuery;
 import net.odmrp.messaging.JoinReply;
 import net.odmrp.messaging.Message;
@@ -34,6 +38,8 @@ public class Router {
 	protected MulticastRoutingSet _multicastRoutingSet;
 	protected ForwardingTable _forwardingTable;
 	protected Blacklist _blacklist;
+	protected PendingAcknowledgementSet _pendingAckSet;
+	protected PreAcknowledgementSet _preAckSet;
 	
 	public Router() throws Exception {
 		_logger = Logger.getLogger(Router.class.getName());
@@ -49,6 +55,8 @@ public class Router {
 		_groupMembershipSet = new GroupMembershipSet();
 		_forwardingTable = new ForwardingTable();
 		_blacklist = new Blacklist();
+		_pendingAckSet = new PendingAcknowledgementSet();
+		_preAckSet = new PreAcknowledgementSet();
 	}
 	
 	// Setters and getters
@@ -128,7 +136,6 @@ public class Router {
 	}
 	
 	public void handleJoinReply(JoinReply jr, InetAddress fromAddress) {
-		// TODO: implement
 		_logger.info("Handling Join Reply from: " + fromAddress);
 		// 9.2.1 Invalid join replies
 		// TODO: Check address length
@@ -171,11 +178,37 @@ public class Router {
 		} else {
 			// 2. Else, find the matching multicast routing tuple
 			MulticastRoutingTuple mRoutingTuple = _multicastRoutingSet.findTuple(jr.getSourceAddress());
-			if (mRoutingTuple == null) {
-				_logger.warning("Error: received a Join Reply not related to existing routing tuple");
+			if (mRoutingTuple == null || mRoutingTuple.sequenceNumber > jr.getSequenceNumber()) {
+				_logger.warning("Error: received a Join Reply stale or not related to existing routing tuple");
+				return;
+			}
+			PendingTuple pendingTuple = _pendingAckSet.getTuple(jr.getMulticastGroupAddress(),
+					jr.getSourceAddress());
+			// 3.  If the Pending Acknowledgement Set contains a matching pending tuple,
+			// acknowledge it
+			if (pendingTuple != null && 
+					pendingTuple.sequenceNumber == jr.getSequenceNumber() &&
+					pendingTuple.nextHopAddress.equals(fromAddress)) {
+				_pendingAckSet.acknowledgeTuple(pendingTuple);
+				// The Join Reply is not processed further
+				return;
+			} else {
+				OverheardTuple overheardTuple = _preAckSet.getTuple(jr.getMulticastGroupAddress(), 
+						jr.getSourceAddress());
+				if (overheardTuple == null || 
+						overheardTuple.sequenceNumber != jr.getSequenceNumber() ||
+						!overheardTuple.originatorAddress.equals(fromAddress)) {
+					_preAckSet.addTuple(jr.getMulticastGroupAddress(), 
+							jr.getSourceAddress(), 
+							jr.getSequenceNumber(), 
+							fromAddress, 
+							System.currentTimeMillis() + Constants.PRE_ACK_TIMEOUT);
+				}
 				return;
 			}
 		}
+		// 3. Else, the Join Reply is silently discarded without further processing
+		return;
 	}
 	
 	/**

@@ -27,6 +27,7 @@ public class PendingAcknowledgementSet {
 			int sequenceNumber,
 			InetAddress nextHopAddress,
 			long expirationTime) {
+		// TODO: start timer
 		MulticastSession session = new MulticastSession(groupAddress, sourceAddress);
 		PendingTuple tuple = new PendingTuple(session, 
 				sequenceNumber, 
@@ -36,4 +37,11 @@ public class PendingAcknowledgementSet {
 		_repository.put(session, tuple);
 	}
 	
+	/**
+	 * TODO: acknowledge tuple: remove tuple and corresponding timer
+	 * @param tuple
+	 */
+	public void acknowledgeTuple(PendingTuple tuple) {
+		
+	}
 }
