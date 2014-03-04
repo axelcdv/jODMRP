@@ -14,7 +14,7 @@ public class PendingAcknowledgementSet {
 	public PendingTuple getTuple(InetAddress groupAddress,
 			InetAddress sourceAddress) {
 		PendingTuple tuple = _repository.get(new MulticastSession(groupAddress, sourceAddress));
-		if (tuple.isExpired()) {
+		if (tuple != null && tuple.isExpired()) {
 			_repository.remove(tuple);
 			return null;
 		} else {
@@ -50,6 +50,6 @@ public class PendingAcknowledgementSet {
 	 * @param tuple
 	 */
 	public void acknowledgeTuple(PendingTuple tuple) {
-		
+		// TODO: implement
 	}
 }

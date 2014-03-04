@@ -21,7 +21,7 @@ public class PreAcknowledgementSet {
 			InetAddress sourceAddress) {
 		MulticastSession key = new MulticastSession(groupAddress, sourceAddress);
 		OverheardTuple tuple = _repository.get(key);
-		if (tuple.isExpired()) {
+		if (tuple != null && tuple.isExpired()) {
 			_repository.remove(key);
 			return null;
 		} else {

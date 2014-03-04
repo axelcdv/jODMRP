@@ -24,7 +24,7 @@ public class ForwardingTable {
 		ForwardingTuple tuple = _repository.get(
 				new MulticastSession(groupAddress, 
 						sourceAddress));
-		if (tuple.isExpired()) {
+		if (tuple != null && tuple.isExpired()) {
 			_repository.remove(tuple); // Call remove on the object or on the key?
 			return null;
 		} else {
