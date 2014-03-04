@@ -40,6 +40,7 @@ public class Receiver extends Thread{
 						", from: " + p.getAddress());
 				if (p.getAddress().equals(_router.getOwnAddress())) {
 					_logger.info("Packet from self, dropping it");
+					return;
 				}
 				Packet packet = new Packet(p.getData(), p.getLength());
 				_router.handlePacket(packet, p.getAddress());

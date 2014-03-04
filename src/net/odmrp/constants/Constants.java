@@ -31,6 +31,10 @@ public class Constants {
 	public static final byte[] GROUP_ADDRESS_BYTES = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,13};
 	public static final String GROUP_ADDRESS_STRING = "255.255.255.255";//"ff02::1"; 
 	
+	// Well-known addresses
+	public static final String LL_MANET_ROUTERS_V4 = "224.0.0.109";
+	public static final String LL_MANET_ROUTERS_v6 = "FF02:0:0:0:0:0:0:6D";
+	
 	// Time constants
 	public static final long SECOND = 1000;
 	public static final long MINUTE = 60 * SECOND;

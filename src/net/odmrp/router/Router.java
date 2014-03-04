@@ -41,10 +41,10 @@ public class Router {
 	protected PendingAcknowledgementSet _pendingAckSet;
 	protected PreAcknowledgementSet _preAckSet;
 	
-	public Router() throws Exception {
+	public Router(InetAddress ownAddress) throws Exception {
 		_logger = Logger.getLogger(Router.class.getName());
 		
-		_ownAddress = InetAddress.getByName("localhost");
+		_ownAddress = ownAddress;
 		InetAddress groupAddress = InetAddress.getByName(Constants.GROUP_ADDRESS_STRING);
 		_sender = new Sender(Constants.DEFAULT_PORT, groupAddress);
 		_receiver = new Receiver(Constants.DEFAULT_PORT, this);
@@ -278,11 +278,11 @@ public class Router {
 		_receiver.start();
 	}
 	
-	public void generateJoinQuery() {
-		_logger.info("Generating Join Query for group: 255.255.255.255");
+	public void generateJoinQuery(InetAddress groupAddress) {
+		_logger.info("Generating Join Query for group: " + groupAddress);
 		try {
 			JoinQuery jq = new JoinQuery(_ownAddress,
-					InetAddress.getByName("255.255.255.255"),
+					groupAddress,
 					0);
 			_sender.send(new Packet(jq));
 		} catch (UnknownHostException e) {
@@ -300,11 +300,11 @@ public class Router {
 	
 	public static void main(String[] args) {
 		try {
-			Router router = new Router();
+			Router router = new Router(InetAddress.getByName("130.129.155.106")); // Configure with own IP address
 			router.initialize();
 			router.setMemberOf(InetAddress.getByName("255.255.255.255"));
-			router.setMemberOf(InetAddress.getByName("ff02::1"));
-			router.generateJoinQuery();
+//			router.setMemberOf(InetAddress.getByName("ff02::1"));
+			router.generateJoinQuery(InetAddress.getByName("255.255.255.255"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

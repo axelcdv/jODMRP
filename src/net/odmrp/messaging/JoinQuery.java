@@ -56,6 +56,12 @@ public class JoinQuery extends Message {
 				Constants.DEFAULT_IPV6_SCOPE);
 	}
 	
+	/**
+	 * 
+	 * @param sourceAddress
+	 * @param groupAddress
+	 * @param sequenceNumber
+	 */
 	public JoinQuery(InetAddress sourceAddress, InetAddress groupAddress, int sequenceNumber) {
 		super();
 		_addressLength = 16;
