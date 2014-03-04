@@ -5,20 +5,23 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.util.logging.Logger;
 
 import net.odmrp.messaging.Packet;
 
-public class Sender {
+public class Sender implements SenderInterface {
 	
+	protected Logger _logger;
 	private MulticastSocket _socket;
 	private InetAddress _groupAddress;
 	private int _port;
 	
 	public Sender(int port, InetAddress groupAddress) throws IOException {
-			_socket = new MulticastSocket(new InetSocketAddress(InetAddress.getByName("::"), port));
-			
-			_port = port;
-			_groupAddress = groupAddress;
+		_logger = Logger.getLogger(Sender.class.getName());
+		_socket = new MulticastSocket(new InetSocketAddress(InetAddress.getByName("::"), port));
+		
+		_port = port;
+		_groupAddress = groupAddress;
 	}
 	
 	public void send(Packet packet) throws IOException {

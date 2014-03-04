@@ -3,22 +3,23 @@ package net.odmrp.forwarding;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import net.odmrp.com.Sender;
+import net.odmrp.com.SenderInterface;
 import net.odmrp.messaging.Message;
 import net.odmrp.messaging.Packet;
 
 public class Forwarder {
 	
-	protected Sender _sender;
+	protected SenderInterface _sender;
 	protected Logger _logger;
 	
-	public Forwarder(Sender s) {
+	public Forwarder(SenderInterface s) {
 		_sender = s;
 		_logger = Logger.getLogger(this.getClass().getName());
 	}
 	
 	public void forwardPacket(Packet p) {
 		try {
+			System.out.println("Forwarding with sender, class: " + _sender.getClass());
 			_sender.send(p);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

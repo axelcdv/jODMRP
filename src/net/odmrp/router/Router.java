@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import net.odmrp.com.Receiver;
 import net.odmrp.com.Sender;
+import net.odmrp.com.SenderInterface;
 import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.PacketFormatException;
 import net.odmrp.forwarding.Forwarder;
@@ -29,7 +30,7 @@ public class Router {
 	
 	private Logger _logger;
 	protected InetAddress _ownAddress;
-	protected Sender _sender;
+	protected SenderInterface _sender;
 	protected Receiver _receiver;
 	protected Forwarder _forwarder;
 	
@@ -41,6 +42,11 @@ public class Router {
 	protected PendingAcknowledgementSet _pendingAckSet;
 	protected PreAcknowledgementSet _preAckSet;
 	
+	/**
+	 * TODO: determine which Exceptions can be thrown
+	 * @param ownAddress
+	 * @throws Exception
+	 */
 	public Router(InetAddress ownAddress) throws Exception {
 		_logger = Logger.getLogger(Router.class.getName());
 		
@@ -59,14 +65,49 @@ public class Router {
 		_preAckSet = new PreAcknowledgementSet();
 	}
 	
+	/**
+	 * Router constructor with class parameters for Sender and Receiver.
+	 * Designed to be used for Sender/Receiver mocks for testing purposes.
+	 * @param ownAddress
+	 * @param senderClass
+	 * @param receiverClass
+	 * @throws Exception
+	 */
+	public Router(InetAddress ownAddress,
+			Class<? extends SenderInterface> senderClass,
+			Class<? extends Receiver> receiverClass) throws Exception {
+		this(ownAddress);
+		
+		InetAddress groupAddress = InetAddress.getByName(Constants.GROUP_ADDRESS_STRING);
+		_sender = senderClass.getConstructor(int.class, InetAddress.class).newInstance(Constants.DEFAULT_PORT,
+				groupAddress);
+		System.out.println("Created router, sender class: " + _sender.getClass());
+		_receiver = receiverClass.getConstructor(int.class, Router.class).newInstance(Constants.DEFAULT_PORT,
+				this);
+		_forwarder = new Forwarder(_sender);
+	}
+	
 	// Setters and getters
 	
 	public InetAddress getOwnAddress() {
 		return _ownAddress;
 	}
 	
+	public SenderInterface getSender() {
+		return _sender;
+	}
+	
+	public Receiver getReceiver() {
+		return _receiver;
+	}
+	
 	// Handle Packets and Messages
 	
+	/**
+	 * 
+	 * @param p
+	 * @param fromAddress
+	 */
 	public void handlePacket(Packet p, InetAddress fromAddress) {
 		_logger.info(p.toString());
 		for (Message m : p.getMessages()) {
@@ -74,6 +115,11 @@ public class Router {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param m
+	 * @param fromAddress
+	 */
 	public void handleMessage(Message m, InetAddress fromAddress) {
 		switch (m.getType()) {
 		case Constants.JOINQUERY_TYPE:

@@ -64,6 +64,7 @@ public class JoinQuery extends Message {
 	 */
 	public JoinQuery(InetAddress sourceAddress, InetAddress groupAddress, int sequenceNumber) {
 		super();
+		_type = Constants.JOINQUERY_TYPE;
 		_addressLength = 16;
 		_sourceAddress = sourceAddress;
 		_groupAddress = groupAddress;
