@@ -1,5 +1,6 @@
 package net.odmrp.messaging;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -55,6 +56,10 @@ public class Packet {
 		return _messages;
 	}
 	
+	/**
+	 * Encode the Packet in a byte array
+	 * @return
+	 */
 	public byte[] toBytes() {
 		byte[] result;
 		byte[][] messageBytes = new byte[_messages.size()][];
@@ -77,5 +82,33 @@ public class Packet {
 		}
 		
 		return result;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer buf = new StringBuffer(super.toString());
+		buf.append("\n" + _messages.size() + " message(s)");
+		for (Message m : _messages) {
+			buf.append("\nMessage: " + m.toString());
+		}
+		return buf.toString();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (!obj.getClass().equals(this.getClass())) {
+			return false;
+		}
+		Packet p = (Packet)obj;
+		if (_messages.size() != p.getMessages().size()) {
+			return false;
+		}
+		Iterator<Message> pIterator = p.getMessages().iterator();
+		for (Iterator<Message> iterator = _messages.iterator(); iterator.hasNext() && pIterator.hasNext();) {
+			if (!((Message)iterator.next()).equals((Message)pIterator.next())) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
