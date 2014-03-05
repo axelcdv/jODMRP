@@ -7,12 +7,16 @@ public class PreAcknowledgementSet {
 	
 	private HashMap<MulticastSession, OverheardTuple> _repository;
 	
+	/**
+	 * Constructor for the PreAck set.
+	 */
 	public PreAcknowledgementSet() {
 		_repository = new HashMap<MulticastSession, OverheardTuple>();
 	}
 	
 	/**
-	 * 
+	 * Find a tuple corresponding to the given session (group & source addresses).
+	 * Return null if no such tuple exists or if it was expired (and hence removed).
 	 * @param groupAddress
 	 * @param sourceAddress
 	 * @return
@@ -30,7 +34,7 @@ public class PreAcknowledgementSet {
 	}
 	
 	/**
-	 * 
+	 * Add an Overheard tuple defined by the following parameters.
 	 * @param groupAddress
 	 * @param sourceAddress
 	 * @param sequenceNumber
@@ -51,7 +55,7 @@ public class PreAcknowledgementSet {
 	}
 	
 	/**
-	 * 
+	 * Set the tuple as expired => remove it from the information set.
 	 * @param tuple
 	 */
 	public void expireTuple(OverheardTuple tuple) {
