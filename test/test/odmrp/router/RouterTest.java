@@ -1,30 +1,44 @@
 package test.odmrp.router;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.PacketFormatException;
+import net.odmrp.informationBases.ForwardingTuple;
+import net.odmrp.informationBases.MulticastRoutingTuple;
 import net.odmrp.messaging.JoinQuery;
 import net.odmrp.messaging.JoinReply;
 import net.odmrp.messaging.Packet;
-import net.odmrp.router.Router;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import test.odmrp.comm.MockReceiver;
 import test.odmrp.comm.MockSender;
 
+/**
+ * Test class for Router and Router state (information sets).
+ * @author Axel Colin de Verdire
+ *
+ */
 public class RouterTest {
+	
+	/**
+	 * TODO:
+	 * - Setup/tear down Router before/after each test case => DONE
+	 * - Add test cases to check that the information sets are being filled and
+	 * emptied correctly (FT, MulticastRoutingSet, PreAckSet, 
+	 * PendingAckSet, Blacklist)
+	 * 
+	 */
 	
 	private static InetAddress _ownAddress;
 	private static InetAddress _groupAddress;
-	private static Router _router;
+	private static RevealingRouter _router;
 	private static MockSender _mockSender;
 //	private static MockReceiver _mockReceiver;
 
@@ -33,10 +47,11 @@ public class RouterTest {
 		_ownAddress = InetAddress.getByName("130.129.155.106");
 		
 		_groupAddress = InetAddress.getByName(Constants.GROUP_ADDRESS_STRING);
-//		_mockSender = new MockSender(Constants.DEFAULT_PORT, _groupAddress);
-//		_mockReceiver = new MockReceiver(Constants.DEFAULT_PORT, router)
-		
-		_router = new Router(_ownAddress,
+	}
+
+	@Before
+	public void setUp() throws Exception {
+		_router = new RevealingRouter(_ownAddress,
 				MockSender.class,
 				MockReceiver.class);
 		
@@ -44,7 +59,7 @@ public class RouterTest {
 		
 		_router.initialize();
 	}
-
+	
 	@Test
 	public void testForwardJoinQuery() {
 		assertEquals(MockSender.class, _router.getSender().getClass());
@@ -90,6 +105,55 @@ public class RouterTest {
 			e.printStackTrace();
 			fail("PacketFormatException");
 		}
+	}
+	
+	@Test
+	public void testMulticastRoutingSet() {
+		try {
+			// Create a JQ from sourceAddress transmitted by neighborAddress
+			InetAddress sourceAddress = InetAddress.getByName("130.129.155.119");
+			InetAddress neighborAddress = InetAddress.getByName("130.129.155.127");
+			int sequenceNumber = 42;
+			JoinQuery jq = new JoinQuery(sourceAddress, 
+					_groupAddress, 
+					sequenceNumber);
+			Packet p = new Packet(jq);
+			
+			// Simulate reception of the JQ
+			_router.handlePacket(p, neighborAddress);
+			
+			MulticastRoutingTuple mRoutingTuple = _router.getMulticastRoutingSet().findTuple(sourceAddress);
+
+			// Test if the Multicast Routing set is correctly populated
+			assertNotNull(mRoutingTuple);
+			assertEquals("The Multicast Routing tuple should have the correct next hop", 
+					neighborAddress, 
+					mRoutingTuple.nextHopAddress);
+			assertEquals("The Multicast Routing tuple should have the correct sequence number", 
+					sequenceNumber, 
+					mRoutingTuple.sequenceNumber);
+			assertEquals("The Multicast Routing tuple should have the correct source", 
+					sourceAddress, 
+					mRoutingTuple.sourceAddress);
+		} catch(UnknownHostException e) {
+			e.printStackTrace();
+			fail("UnknownHostException");
+		}		
+	}
+	
+	@Test
+	public void testForwardingTable() {
+		fail("TODO");
+	}
+	
+	@Test
+	public void testPendingAckSet() {
+		fail("TODO");
+	}
+	
+	@Test
+	public void testPreAckSet() {
+		fail("TODO");
 	}
 
 }
