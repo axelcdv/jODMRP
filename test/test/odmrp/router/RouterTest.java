@@ -9,6 +9,8 @@ import net.odmrp.constants.Constants;
 import net.odmrp.exceptions.PacketFormatException;
 import net.odmrp.informationBases.ForwardingTuple;
 import net.odmrp.informationBases.MulticastRoutingTuple;
+import net.odmrp.informationBases.OverheardTuple;
+import net.odmrp.informationBases.PendingTuple;
 import net.odmrp.messaging.JoinQuery;
 import net.odmrp.messaging.JoinReply;
 import net.odmrp.messaging.Packet;
@@ -60,6 +62,43 @@ public class RouterTest {
 		_router.initialize();
 	}
 	
+	/**
+	 * Create a Join Query based on the given parameters and simulate its
+	 * reception by the router.
+	 * @param sourceAddressString
+	 * @param neighborAddressString
+	 * @param sequenceNumber
+	 * @param simulateJR 		true to also simulate the reception of a JR
+	 * @param receiverAddress	Address of the (virtual) Router that sends the
+	 * 							Join Reply. Should be null if simulateJR is 
+	 * 							false.
+	 * @param nextHopAddress	Address of the next hop contained in the JR.
+	 * 							Should be null if simulateJR is false.
+	 * @throws UnknownHostException
+	 */
+	public void simulateReception(InetAddress sourceAddress,
+			InetAddress neighborAddress,
+			int sequenceNumber,
+			boolean simulateJR,
+			InetAddress receiverAddress,
+			InetAddress nextHopAddress) throws UnknownHostException, PacketFormatException {
+		// Create a JQ from sourceAddress transmitted by neighborAddress
+		JoinQuery jq = new JoinQuery(sourceAddress, 
+				_groupAddress, 
+				sequenceNumber);
+		Packet p = new Packet(jq);
+
+		// Simulate reception of the JQ
+		_router.handlePacket(p, neighborAddress);
+		
+		if (simulateJR) {
+			JoinReply jr = new JoinReply(jq, nextHopAddress);
+			Packet jrPkt = new Packet(jr);
+			
+			_router.handlePacket(jrPkt, receiverAddress);
+		}
+	}
+	
 	@Test
 	public void testForwardJoinQuery() {
 		assertEquals(MockSender.class, _router.getSender().getClass());
@@ -107,6 +146,10 @@ public class RouterTest {
 		}
 	}
 	
+	/**
+	 * Test that the Multicast Routing set is correctly populated by the
+	 * reception of a JQ.
+	 */
 	@Test
 	public void testMulticastRoutingSet() {
 		try {
@@ -141,19 +184,146 @@ public class RouterTest {
 		}		
 	}
 	
+	/**
+	 * Test that the Forwarding Table is correctly populated by the reception
+	 * of a JR with this router as a next hop.
+	 */
 	@Test
 	public void testForwardingTable() {
-		fail("TODO");
+		try {
+			// Setup addresses and sequence number
+			InetAddress sourceAddress = InetAddress.getByName("130.129.155.119");
+			InetAddress neighborAddress = InetAddress.getByName("130.129.155.127");
+			InetAddress receiverAddress = InetAddress.getByName("130.129.155.117");
+			int sequenceNumber = 42;
+			
+			// Simulate reception of both a Join Query and a corresponding JR
+			// with this router as next hop
+			simulateReception(sourceAddress, 
+					neighborAddress, 
+					sequenceNumber, 
+					true, 
+					receiverAddress, 
+					_ownAddress);
+			
+			ForwardingTuple fTuple = _router.getForwardingTable().getTuple(_groupAddress, sourceAddress);
+			
+			assertNotNull("A forwarding tuple should have been setup by the Join Reply", 
+					fTuple);
+			assertEquals("The multicast group address should match the Join Reply's", 
+					_groupAddress, 
+					fTuple.multicastGroupAddress);
+			assertEquals("The multicast source address should match the Join Reply's", 
+					sourceAddress, 
+					fTuple.multicastSourceAddress);
+			assertEquals("The sequence number should match the Join Reply's", 
+					sequenceNumber, 
+					fTuple.sequenceNumber);
+		} catch(UnknownHostException e) {
+			e.printStackTrace();
+			fail("UnknownHostException");
+		} catch (PacketFormatException e) {
+			e.printStackTrace();
+			fail("PacketFormatException");
+		}
 	}
 	
+	/**
+	 * Test that the Pending Ack set is correctly populated when sending a JR 
+	 * that hasn't been pre-acknowledged.
+	 */
 	@Test
 	public void testPendingAckSet() {
-		fail("TODO");
+		try {
+			// Setup addresses and sequence number
+			InetAddress sourceAddress = InetAddress.getByName("130.129.155.119");
+			InetAddress neighborAddress = InetAddress.getByName("130.129.155.127");
+			InetAddress receiverAddress = InetAddress.getByName("130.129.155.117");
+			int sequenceNumber = 42;
+
+			// Simulate reception of both a Join Query and a corresponding JR
+			// with this router as next hop
+			simulateReception(sourceAddress, 
+					neighborAddress, 
+					sequenceNumber, 
+					true, 
+					receiverAddress, 
+					_ownAddress);
+			
+			PendingTuple pTuple = _router.getPendingAcknowledgementSet()
+					.getTuple(_groupAddress, sourceAddress);
+			
+			assertNotNull("A pending tuple should have been setup by the Join Reply", 
+					pTuple);
+			assertEquals("The multicast group address should match the Join Reply's", 
+					_groupAddress, 
+					pTuple.multicastSession.groupAddress);
+			assertEquals("The multicast source address should match the Join Reply's", 
+					sourceAddress, 
+					pTuple.multicastSession.sourceAddress);
+			assertEquals("The sequence number should match the Join Reply's", 
+					sequenceNumber, 
+					pTuple.sequenceNumber);
+			assertFalse("The tuple should not be acknowledged", 
+					pTuple.acknowledged);
+			assertEquals("The number of transmissions should be 1", 
+					1, pTuple.transmissionCounter);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			fail(e.toString());
+		} catch (PacketFormatException e) {
+			e.printStackTrace();
+			fail(e.toString());
+		}
 	}
 	
+	/**
+	 * Test that the Pre Ack set is correctly populated by the reception of a
+	 * JR that does not list this router as the next hop.
+	 */
 	@Test
 	public void testPreAckSet() {
-		fail("TODO");
+		try {
+			// Setup addresses and sequence number
+			InetAddress sourceAddress = InetAddress.getByName("130.129.155.119");
+			InetAddress neighborAddress = InetAddress.getByName("130.129.155.127");
+			InetAddress receiverAddress = InetAddress.getByName("130.129.155.117");
+			InetAddress nextHopAddress = InetAddress.getByName("130.129.155.65");
+			int sequenceNumber = 42;
+
+			// Simulate reception of both a Join Query and a corresponding JR
+			// with this router as next hop
+			simulateReception(sourceAddress, 
+					neighborAddress, 
+					sequenceNumber, 
+					true, 
+					receiverAddress, 
+					nextHopAddress);
+			
+			OverheardTuple oTuple = _router.getPreAcknowledgementSet()
+					.getTuple(_groupAddress, sourceAddress);
+			
+			assertNotNull("An overheard tuple should have been setup by the Join Reply", 
+					oTuple);
+			assertEquals("The multicast group address should match the Join Reply's", 
+					_groupAddress, 
+					oTuple.session.groupAddress);
+			assertEquals("The multicast source address should match the Join Reply's", 
+					sourceAddress,
+					oTuple.session.sourceAddress);
+			assertEquals("The sequence number should match the Join Reply's", 
+					sequenceNumber, 
+					oTuple.sequenceNumber);
+			assertEquals("The originator address should match the one that was setup",
+					receiverAddress,
+					oTuple.originatorAddress);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			fail(e.toString());
+		} catch (PacketFormatException e) {
+			e.printStackTrace();
+			fail(e.toString());
+		}
 	}
 
 }
