@@ -34,7 +34,7 @@ public class RouterTest {
 	 * - Setup/tear down Router before/after each test case => DONE
 	 * - Add test cases to check that the information sets are being filled and
 	 * emptied correctly (FT, MulticastRoutingSet, PreAckSet, 
-	 * PendingAckSet, Blacklist)
+	 * PendingAckSet, Blacklist) => filled: done, except blacklist
 	 * 
 	 */
 	
